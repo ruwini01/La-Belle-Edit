@@ -1,0 +1,18 @@
+---
+import { DISCLOSURE } from '../config.js';
+---
+
+<p class="disclosure">{DISCLOSURE}</p>
+
+<style>
+  /* FTC guidance is "clear and conspicuous" — near the links, not in the
+     footer. Muted but not hidden: same size as body captions, full contrast
+     ratio against the page ground. */
+  .disclosure {
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+    border-left: 2px solid var(--blush);
+    padding-left: 0.85rem;
+    max-width: var(--measure);
+  }
+</style>

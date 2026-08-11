@@ -1,0 +1,142 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProductCard from '../components/ProductCard.astro';
+import Disclosure from '../components/Disclosure.astro';
+import { affiliateUrl } from '../utils/affiliate.js';
+import { SITE } from '../config.js';
+
+/**
+ * Runs once at build time. Every non-draft roundup becomes a static HTML file
+ * at /its-slug/ — there is no server deciding this at request time.
+ */
+export async function getStaticPaths() {
+  const roundups = await getCollection('roundups', ({ data }) => !data.draft);
+  return roundups.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { title, description, products, category, pubDate, updatedDate, pinImage, pinAlt } = entry.data;
+
+// Body copy of the markdown file, rendered as a component.
+const { Content } = await render(entry);
+
+const pageUrl = new URL(Astro.url.pathname, SITE.url).href;
+
+/**
+ * ItemList structured data. For "N ideas" pages this is what lets Google
+ * show the count and understand the page as a list rather than one article.
+ */
+const jsonLd = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: title,
+  description,
+  numberOfItems: products.length,
+  itemListOrder: 'https://schema.org/ItemListOrderAscending',
+  itemListElement: products.map((product, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: product.name,
+    url: affiliateUrl(product.url),
+    image: new URL(product.image.src, SITE.url).href,
+  })),
+});
+
+const dateFmt = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' });
+const shown = updatedDate ?? pubDate;
+---
+
+<BaseLayout title={title} description={description} ogImage={pinImage.src} jsonLd={jsonLd}>
+  <article>
+    <header class="hero wrap">
+      <p class="eyebrow">
+        <a href={`/category/${category}/`}>{category.replace(/-/g, ' ')}</a>
+        <span aria-hidden="true"> · </span>
+        <span>{products.length} picks</span>
+      </p>
+
+      <h1>{title}</h1>
+
+      <div class="hero__meta">
+        <p class="prose hero__intro">{description}</p>
+        <p class="hero__date">
+          <time datetime={shown.toISOString()}>{dateFmt.format(shown)}</time>
+        </p>
+      </div>
+
+      <Disclosure />
+    </header>
+
+    {/* Markdown body, if the file has one. Optional — many edits are pure grid. */}
+    <div class="wrap prose body-copy">
+      <Content />
+    </div>
+
+    <div class="wrap">
+      <ol class="grid" role="list">
+        {products.map((product, i) => (
+          <li>
+            <ProductCard product={product} index={i + 1} pageUrl={pageUrl} />
+          </li>
+        ))}
+      </ol>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .hero {
+    padding-block: clamp(2.5rem, 1.5rem + 4vw, 4.5rem) 2rem;
+  }
+
+  .hero .eyebrow a { text-decoration: none; }
+  .hero .eyebrow a:hover { text-decoration: underline; }
+
+  .hero h1 { margin-top: 0.9rem; max-width: 20ch; }
+
+  .hero__meta {
+    margin-top: 1.4rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.6rem 2rem;
+    padding-bottom: 1.4rem;
+    border-bottom: 1px solid var(--blush);
+  }
+
+  .hero__intro { font-size: var(--step-1); line-height: 1.45; }
+
+  .hero__date {
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .hero :global(.disclosure) { margin-top: 1.4rem; }
+
+  .body-copy:not(:empty) { margin-block: 2.5rem 0; }
+
+  .grid {
+    list-style: none;
+    padding: 0;
+    margin-top: 2.75rem;
+    display: grid;
+    gap: clamp(1.75rem, 1rem + 3vw, 3rem) clamp(1rem, 0.5rem + 2vw, 1.75rem);
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 640px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (min-width: 1000px) {
+    .grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>

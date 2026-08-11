@@ -1,0 +1,92 @@
+---
+import { getCollection } from 'astro:content';
+import { Picture } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { SITE } from '../../config.js';
+
+/**
+ * Category pages are derived, never hand-written. Add a new `category:` value
+ * to any markdown file and its archive page appears on the next build —
+ * this is the whole reason for using a generator over loose HTML files.
+ */
+export async function getStaticPaths() {
+  const roundups = await getCollection('roundups', ({ data }) => !data.draft);
+
+  // Map keeps insertion order and gives O(1) lookups while bucketing.
+  const buckets = new Map();
+  for (const entry of roundups) {
+    const key = entry.data.category;
+    if (!buckets.has(key)) buckets.set(key, []);
+    buckets.get(key).push(entry);
+  }
+
+  return [...buckets].map(([category, entries]) => ({
+    params: { category },
+    props: {
+      category,
+      entries: entries.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()),
+    },
+  }));
+}
+
+const { category, entries } = Astro.props;
+const label = category.replace(/-/g, ' ');
+const totalPicks = entries.reduce((sum, e) => sum + e.data.products.length, 0);
+---
+
+<BaseLayout
+  title={label.replace(/\b\w/g, (c) => c.toUpperCase())}
+  description={`${entries.length} outfit edits in ${label} — ${totalPicks} shoppable picks from ${SITE.name}.`}
+>
+  <section class="wrap head">
+    <p class="eyebrow">Category</p>
+    <h1>{label}</h1>
+    <p class="head__count">{entries.length} edits · {totalPicks} picks</p>
+  </section>
+
+  <section class="wrap">
+    <ul class="feed" role="list">
+      {entries.map((entry, i) => (
+        <li>
+          <a class="feed__link" href={`/${entry.id}/`}>
+            <div class="feed__frame">
+              <Picture
+                src={entry.data.pinImage}
+                alt={entry.data.pinAlt}
+                widths={[320, 480, 640]}
+                sizes="(min-width: 900px) 300px, 90vw"
+                formats={['avif', 'webp']}
+                quality={72}
+                loading={i < 2 ? 'eager' : 'lazy'}
+                class="feed__img"
+              />
+            </div>
+            <h2 class="feed__title">{entry.data.title}</h2>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+</BaseLayout>
+
+<style>
+  .head { padding-block: clamp(2.5rem, 1.5rem + 4vw, 4.5rem) 0; }
+  .head h1 { margin-top: 0.8rem; text-transform: capitalize; }
+  .head__count {
+    margin-top: 0.8rem;
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .feed {
+    list-style: none; padding: 0; margin-top: 2.5rem;
+    display: grid; gap: 2.5rem 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  }
+  .feed__link { text-decoration: none; display: block; }
+  .feed__frame { aspect-ratio: 2/3; background: var(--shell); border-radius: var(--radius); overflow: hidden; }
+  .feed__img { width: 100%; height: 100%; object-fit: cover; }
+  .feed__title { margin-top: 0.8rem; font-size: var(--step-1); font-variation-settings: 'SOFT' 20, 'WONK' 1, 'opsz' 40; }
+</style>
