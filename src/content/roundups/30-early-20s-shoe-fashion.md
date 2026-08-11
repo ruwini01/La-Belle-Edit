@@ -1,9 +1,9 @@
 ---
-title: 'Top 20 White Sweater Styles 2026'
+title: '30 Early-20s Shoe Ideas for Everyday Style'
 description: 'Thirty shoes that carry a whole early-twenties wardrobe — ballet flats, chunky loafers, low-top sneakers and the boots worth the money.'
 category: shoes
 pubDate: 2026-08-11
-pinImage: ./images/1.png
+pinImage: ./images/pin-early-20s-shoes.jpg
 pinAlt: 'Collage flyer of thirty shoe styles for early twenties outfits'
 
 # Add items here — the page, the grid, the count and the structured data
@@ -11,19 +11,19 @@ pinAlt: 'Collage flyer of thirty shoe styles for early twenties outfits'
 products:
   - name: Square-toe ballet flats
     note: The pair that makes jeans look deliberate.
-    image: ./images/2.png
+    image: ./images/shoe-01.jpg
     alt: Black square-toe ballet flats on a linen background
     url: https://www.amazon.com/dp/B0EXAMPLE1
 
   - name: Chunky lug-sole loafers
     note: Wears with tights in winter, bare ankles in spring.
-    image: ./images/3.png
+    image: ./images/shoe-02.jpg
     alt: Brown lug-sole loafers photographed from above
     url: https://www.amazon.com/dp/B0EXAMPLE2
 
   - name: Low-top leather sneakers
     note: Goes with everything, ages well, forgives a lot.
-    image: ./images/4.png
+    image: ./images/shoe-03.jpg
     alt: White low-top leather sneakers side view
     url: https://www.amazon.com/dp/B0EXAMPLE3
 

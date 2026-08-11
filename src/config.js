@@ -7,7 +7,7 @@ export const SITE = {
   name: 'La Belle Edit',
   tagline: 'Outfit edits worth saving',
   description:
-    'Curated outfit edits - dresses, shoes, bags and activewear, shoppable in one tap.',
+    'Curated outfit edits — dresses, shoes, bags and activewear, shoppable in one tap.',
   locale: 'en_US',
   author: 'La Belle Edit',
 };

@@ -1,8 +1,15 @@
 ---
-import { getCollection } from 'astro:content';
+import { getCollection, type CollectionEntry } from 'astro:content';
 import { Picture } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { SITE } from '../../config.js';
+
+type Roundup = CollectionEntry<'roundups'>;
+
+interface Props {
+  category: string;
+  entries: Roundup[];
+}
 
 /**
  * Category pages are derived, never hand-written. Add a new `category:` value
@@ -13,11 +20,14 @@ export async function getStaticPaths() {
   const roundups = await getCollection('roundups', ({ data }) => !data.draft);
 
   // Map keeps insertion order and gives O(1) lookups while bucketing.
-  const buckets = new Map();
+  // Typing it explicitly is what keeps `entries` strongly typed downstream —
+  // a bare `new Map()` degrades every consumer to `any`.
+  const buckets = new Map<string, Roundup[]>();
   for (const entry of roundups) {
     const key = entry.data.category;
-    if (!buckets.has(key)) buckets.set(key, []);
-    buckets.get(key).push(entry);
+    const bucket = buckets.get(key);
+    if (bucket) bucket.push(entry);
+    else buckets.set(key, [entry]);
   }
 
   return [...buckets].map(([category, entries]) => ({
@@ -35,7 +45,7 @@ const totalPicks = entries.reduce((sum, e) => sum + e.data.products.length, 0);
 ---
 
 <BaseLayout
-  title={label.replace(/\b\w/g, (c) => c.toUpperCase())}
+  title={label.replace(/\b\w/g, (c: string) => c.toUpperCase())}
   description={`${entries.length} outfit edits in ${label} — ${totalPicks} shoppable picks from ${SITE.name}.`}
 >
   <section class="wrap head">
